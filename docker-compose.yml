@@ -1,0 +1,74 @@
+# ====================================
+# Docker Compose - Security Scanner MVP
+# ====================================
+# Usage: docker compose up --build
+# ====================================
+
+version: '3.8'
+
+services:
+  # ============ Backend FastAPI ============
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: security-scanner-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ZAP_API_URL=http://zap:8080
+      - USE_DOCKER_EXEC=false
+    depends_on:
+      - zap
+    networks:
+      - scanner-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============ Frontend Next.js ============
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: security-scanner-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - scanner-network
+
+  # ============ OWASP ZAP ============
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: security-scanner-zap
+    volumes:
+      - ./data:/zap/wrk:rw
+    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
+    ports:
+      - "8080:8080"
+    networks:
+      - scanner-network
+    user: zap
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/JSON/core/view/version/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  scanner-network:
+    driver: bridge
+
+volumes:
+  data:

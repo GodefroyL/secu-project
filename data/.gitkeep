@@ -1,0 +1,7 @@
+# Data directory
+# This folder is used for:
+# - SQLite database
+# - Scan artifacts
+# - Generated reports
+# 
+# It is mounted as a volume in Docker containers

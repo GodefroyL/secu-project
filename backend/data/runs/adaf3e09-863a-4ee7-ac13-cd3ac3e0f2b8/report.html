@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de Sécurité - https://google.com</title>
+    <style>
+        
+        :root {
+            --color-critical: #dc2626;
+            --color-high: #ea580c;
+            --color-medium: #ca8a04;
+            --color-low: #2563eb;
+            --color-info: #64748b;
+            --color-bg: #f8fafc;
+            --color-card: #ffffff;
+            --color-border: #e2e8f0;
+            --color-text: #1e293b;
+            --color-text-muted: #64748b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e3a5f, #2d5a87);
+            color: white;
+            border-radius: 1rem;
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        section {
+            background: var(--color-card);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: var(--color-text);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-border);
+        }
+        
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .meta-item .label {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin-bottom: 0.25rem;
+        }
+        
+        .meta-item .value {
+            font-weight: 600;
+            word-break: break-all;
+        }
+        
+        .status-finished { color: #16a34a; }
+        .status-failed { color: var(--color-critical); }
+        .status-running { color: var(--color-medium); }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-card {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+        }
+        
+        .summary-card.critical { background: var(--color-critical); }
+        .summary-card.high { background: var(--color-high); }
+        .summary-card.medium { background: var(--color-medium); }
+        .summary-card.low { background: var(--color-low); }
+        .summary-card.info { background: var(--color-info); }
+        
+        .summary-card .count {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .total-findings {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .findings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .findings-table th,
+        .findings-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .findings-table th {
+            background: var(--color-bg);
+            font-weight: 600;
+        }
+        
+        .findings-table tbody tr:hover {
+            background: var(--color-bg);
+        }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: white;
+        }
+        
+        .severity-badge.critical { background: var(--color-critical); }
+        .severity-badge.high { background: var(--color-high); }
+        .severity-badge.medium { background: var(--color-medium); }
+        .severity-badge.low { background: var(--color-low); }
+        .severity-badge.info { background: var(--color-info); }
+        
+        .finding-detail {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--color-border);
+            background: var(--color-bg);
+        }
+        
+        .finding-detail.severity-critical { border-left-color: var(--color-critical); }
+        .finding-detail.severity-high { border-left-color: var(--color-high); }
+        .finding-detail.severity-medium { border-left-color: var(--color-medium); }
+        .finding-detail.severity-low { border-left-color: var(--color-low); }
+        .finding-detail.severity-info { border-left-color: var(--color-info); }
+        
+        .finding-header {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .finding-id {
+            font-family: monospace;
+            background: var(--color-card);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .finding-detail h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .finding-detail h4 {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin: 1rem 0 0.5rem;
+        }
+        
+        .finding-evidence pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .finding-remediation ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+        
+        .finding-remediation li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        
+        .warning-box h3 {
+            color: #92400e;
+            margin: 1rem 0 0.5rem;
+        }
+        
+        .warning-box h3:first-child {
+            margin-top: 0;
+        }
+        
+        .warning-box ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .no-findings {
+            text-align: center;
+            color: #16a34a;
+            font-size: 1.25rem;
+            padding: 2rem;
+        }
+        
+        .more-findings {
+            text-align: center;
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+        }
+        
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: var(--color-bg);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .findings-table {
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                max-width: none;
+            }
+            
+            section {
+                break-inside: avoid;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Rapport d'Analyse de Sécurité</h1>
+            <p class="subtitle">Analyse automatisée non-destructive</p>
+        </header>
+
+        <section class="meta-info">
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span class="label">URL Cible</span>
+                    <span class="value">https://google.com</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">ID du Scan</span>
+                    <span class="value">adaf3e09-863a-4ee7-ac13-cd3ac3e0f2b8</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Date d'Analyse</span>
+                    <span class="value">2026-01-08 11:48:56 UTC</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Statut</span>
+                    <span class="value status-finished">FINISHED</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="executive-summary">
+            <h2>📊 Résumé Exécutif</h2>
+            <div class="summary-grid">
+                <div class="summary-card critical">
+                    <span class="count">0</span>
+                    <span class="label">Critique</span>
+                </div>
+                <div class="summary-card high">
+                    <span class="count">1</span>
+                    <span class="label">Élevée</span>
+                </div>
+                <div class="summary-card medium">
+                    <span class="count">4</span>
+                    <span class="label">Moyenne</span>
+                </div>
+                <div class="summary-card low">
+                    <span class="count">3</span>
+                    <span class="label">Faible</span>
+                </div>
+                <div class="summary-card info">
+                    <span class="count">0</span>
+                    <span class="label">Info</span>
+                </div>
+            </div>
+            <p class="total-findings">
+                <strong>Total:</strong> 8 vulnérabilité(s) détectée(s)
+            </p>
+        </section>
+
+        <section class="findings">
+            <h2>🔍 Vulnérabilités Détectées</h2>
+            
+        <table class="findings-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Sévérité</th>
+                    <th>Catégorie</th>
+                    <th>Description</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr class="severity-high">
+                <td><code>HDR-0001</code></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td>OWASP A05</td>
+                <td>HSTS header missing - vulnerable to protocol downgrade attacks</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-medium">
+                <td><code>HDR-0002</code></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td>OWASP A03</td>
+                <td>CSP header missing - vulnerable to XSS and data injection attacks</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-medium">
+                <td><code>HDR-0003</code></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td>OWASP A05</td>
+                <td>X-Content-Type-Options missing - vulnerable to MIME sniffing attacks</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-medium">
+                <td><code>HDR-0007</code></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td>OWASP A03</td>
+                <td>Cookie &#x27;SOCS&#x27; missing HttpOnly flag</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-medium">
+                <td><code>HDR-0008</code></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td>OWASP A01</td>
+                <td>Cookie &#x27;__Secure-BUCKET&#x27; missing SameSite attribute</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-low">
+                <td><code>HDR-0004</code></td>
+                <td><span class="severity-badge low">Low</span></td>
+                <td>OWASP A05</td>
+                <td>Referrer-Policy missing - may leak sensitive URL information</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-low">
+                <td><code>HDR-0005</code></td>
+                <td><span class="severity-badge low">Low</span></td>
+                <td>OWASP A05</td>
+                <td>Permissions-Policy missing - browser features not restricted</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            <tr class="severity-low">
+                <td><code>HDR-0006</code></td>
+                <td><span class="severity-badge low">Low</span></td>
+                <td>OWASP A05</td>
+                <td>Server header reveals technology information</td>
+                <td><code>headers_probe</code></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
+            
+            
+        </section>
+
+        <section class="details">
+            <h2>📋 Détails des Vulnérabilités</h2>
+            
+            <div class="finding-detail severity-high">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0001</span>
+                    <span class="severity-badge high">High</span>
+                    <span class="finding-category">OWASP A05</span>
+                </div>
+                
+                <h3>HSTS header missing - vulnerable to protocol downgrade attacks</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>The Strict-Transport-Security header is not present in the response.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add Strict-Transport-Security header</li><li>Recommended value: max-age=31536000; includeSubDomains; preload</li><li>Consider HSTS preloading for maximum protection</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-medium">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0002</span>
+                    <span class="severity-badge medium">Medium</span>
+                    <span class="finding-category">OWASP A03</span>
+                </div>
+                
+                <h3>CSP header missing - vulnerable to XSS and data injection attacks</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>The Content-Security-Policy header is not present in the response.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Implement Content-Security-Policy header</li><li>Start with report-only mode to test</li><li>Gradually restrict sources to trusted domains</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-medium">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0003</span>
+                    <span class="severity-badge medium">Medium</span>
+                    <span class="finding-category">OWASP A05</span>
+                </div>
+                
+                <h3>X-Content-Type-Options missing - vulnerable to MIME sniffing attacks</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>The X-Content-Type-Options header is not present in the response.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add X-Content-Type-Options: nosniff</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-medium">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0007</span>
+                    <span class="severity-badge medium">Medium</span>
+                    <span class="finding-category">OWASP A03</span>
+                </div>
+                
+                <h3>Cookie &#x27;SOCS&#x27; missing HttpOnly flag</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>Set-Cookie: SOCS=CAAaBgiA5_vKBg; expires=Sun, 07-Feb-2027 11:48:56 GMT; path=/; domain=.google.com; Secure; SameSite=lax
+Without HttpOnly, JavaScript can access this cookie (XSS risk).</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add the HttpOnly flag to prevent JavaScript access</li><li>Example: Set-Cookie: name=value; HttpOnly</li><li>This is critical for session cookies</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-medium">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0008</span>
+                    <span class="severity-badge medium">Medium</span>
+                    <span class="finding-category">OWASP A01</span>
+                </div>
+                
+                <h3>Cookie &#x27;__Secure-BUCKET&#x27; missing SameSite attribute</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>Set-Cookie: __Secure-BUCKET=CM4H; expires=Tue, 07-Jul-2026 11:48:56 GMT; path=/; domain=.google.com; Secure; HttpOnly
+Without SameSite, cookie is vulnerable to CSRF attacks.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add SameSite=Strict or SameSite=Lax</li><li>SameSite=Strict provides maximum CSRF protection</li><li>SameSite=Lax is a reasonable default</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-low">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0004</span>
+                    <span class="severity-badge low">Low</span>
+                    <span class="finding-category">OWASP A05</span>
+                </div>
+                
+                <h3>Referrer-Policy missing - may leak sensitive URL information</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>The Referrer-Policy header is not present in the response.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add Referrer-Policy: strict-origin-when-cross-origin</li><li>Or use no-referrer for maximum privacy</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-low">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0005</span>
+                    <span class="severity-badge low">Low</span>
+                    <span class="finding-category">OWASP A05</span>
+                </div>
+                
+                <h3>Permissions-Policy missing - browser features not restricted</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>The Permissions-Policy header is not present in the response.</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Add Permissions-Policy header to restrict browser features</li><li>Disable unused features like geolocation, camera, microphone</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="finding-detail severity-low">
+                <div class="finding-header">
+                    <span class="finding-id">HDR-0006</span>
+                    <span class="severity-badge low">Low</span>
+                    <span class="finding-category">OWASP A05</span>
+                </div>
+                
+                <h3>Server header reveals technology information</h3>
+                
+                <div class="finding-meta">
+                    <p><strong>Asset:</strong> <code>https://google.com</code></p>
+                    <p><strong>Source:</strong> headers_probe (custom_probe)</p>
+                </div>
+                
+                <div class="finding-evidence">
+                    <h4>Preuves Techniques</h4>
+                    <pre>Server: gws</pre>
+                </div>
+                
+                <div class="finding-remediation">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        <li>Remove or obfuscate the Server header</li><li>Configure your server to hide version information</li>
+                    </ul>
+                </div>
+            </div>
+            
+        </section>
+
+        <section class="limitations">
+            <h2>⚠️ Limitations et Avertissement Légal</h2>
+            <div class="warning-box">
+                <h3>Portée de l'Analyse</h3>
+                <ul>
+                    <li>Cette analyse est <strong>strictement non-destructive</strong> (passive)</li>
+                    <li>Aucune tentative d'exploitation n'a été effectuée</li>
+                    <li>Aucun test de brute force ou de flood</li>
+                    <li>Scan limité aux vulnérabilités détectables passivement</li>
+                </ul>
+
+                <h3>Avertissement</h3>
+                <p>
+                    Ce rapport est généré à des fins éducatives dans le cadre d'un projet étudiant.
+                    Les résultats peuvent contenir des faux positifs et ne constituent pas un audit 
+                    de sécurité complet. Une analyse approfondie par des professionnels est 
+                    recommandée avant toute mise en production.
+                </p>
+
+                <h3>Outils Utilisés</h3>
+                <ul>
+                    <li>OWASP ZAP Baseline Scan (passif)</li>
+                    <li>Analyse TLS/SSL personnalisée</li>
+                    <li>Analyse des en-têtes HTTP de sécurité</li>
+                    <li>Analyse des cookies</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>
+                Rapport généré automatiquement par Security Scanner MVP<br>
+                Projet étudiant - 2026
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
