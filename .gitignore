@@ -16,6 +16,8 @@ __pycache__/
 env/
 venv/
 .venv/
+.venv_secu_log/
+venv_secu_log/
 *.egg-info/
 dist/
 

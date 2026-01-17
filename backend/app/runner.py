@@ -18,7 +18,7 @@ from app.db import (
 from app.models import RunStatus, ScanRun
 from app.probes import HeadersProbe, TLSProbe
 from app.reporting import ReportBuilder
-from app.attacks.lab_attacks import run_lab_attacks
+from backend.app.attacks.lab_attacks import run_lab_attacks
 
 # ZAP is optional (requires Docker)
 ZAP_ENABLED = os.environ.get("ZAP_ENABLED", "false").lower() == "true"
