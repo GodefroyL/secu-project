@@ -75,12 +75,13 @@ class ScanRun:
     status: RunStatus
     progress: int  # 0-100
     max_duration_sec: int
+    lab_mode: bool
     created_at: datetime
     updated_at: datetime
     error_message: Optional[str] = None
 
     @classmethod
-    def create(cls, target_url: str, max_duration_sec: int = 300) -> "ScanRun":
+    def create(cls, target_url: str, max_duration_sec: int = 300, lab_mode: bool = False) -> "ScanRun":
         now = datetime.utcnow()
         return cls(
             id=str(uuid4()),
@@ -88,6 +89,7 @@ class ScanRun:
             status=RunStatus.QUEUED,
             progress=0,
             max_duration_sec=max_duration_sec,
+            lab_mode=lab_mode,
             created_at=now,
             updated_at=now,
         )
@@ -99,6 +101,7 @@ class ScanRun:
             "status": self.status.value,
             "progress": self.progress,
             "max_duration_sec": self.max_duration_sec,
+            "lab_mode": self.lab_mode,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "error_message": self.error_message,

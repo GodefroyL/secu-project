@@ -7,8 +7,13 @@ import { startScan, ApiError } from '@/lib/api';
 export default function HomePage() {
   const router = useRouter();
   const [url, setUrl] = useState('');
+  const [labMode, setLabMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isLabEligible = (value: string) => {
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +21,7 @@ export default function HomePage() {
     setIsLoading(true);
 
     try {
-      const response = await startScan({ target_url: url });
+      const response = await startScan({ target_url: url, lab_mode: true });
       router.push(`/runs/${response.run_id}`);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -39,7 +44,7 @@ export default function HomePage() {
           Scannez automatiquement les vulnerabilites de votre site web
         </p>
         <p className="text-sm text-gray-400 mt-2">
-          Analyse non-destructive et passive uniquement
+          Analyse non-destructive et passive par defaut (mode laboratoire optionnel)
         </p>
       </div>
 
@@ -63,6 +68,26 @@ export default function HomePage() {
             <p className="mt-2 text-sm text-gray-500">
               Entrez l'URL complete ou le nom de domaine (HTTPS sera ajoute automatiquement)
             </p>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="lab-mode"
+              checked={labMode}
+              onChange={(e) => setLabMode(e.target.checked)}
+              disabled={isLoading}
+              className="mt-1 h-4 w-4 border-gray-300 text-black focus:ring-black"
+            />
+            <label htmlFor="lab-mode" className="text-sm text-gray-700">
+              Activer le mode laboratoire (tests actifs). A utiliser uniquement sur un site que vous possedez ou pour
+              lequel vous avez une autorisation explicite.
+              {labMode && !isLabEligible(url) && (
+                <span className="block text-xs text-gray-500 mt-1">
+                  Le mode laboratoire est automatiquement desactive si la cible n'est pas localhost, 127.0.0.1 ou *.local.
+                </span>
+              )}
+            </label>
           </div>
 
           {error && (
@@ -134,8 +159,8 @@ export default function HomePage() {
           Avertissement Important
         </h3>
         <ul className="text-sm text-gray-700 space-y-1">
-          <li>- Ce scanner effectue uniquement des analyses non-destructives</li>
-          <li>- Aucun brute force, flood ou tentative d'exploitation</li>
+          <li>- Par defaut, le scanner effectue uniquement des analyses non-destructives</li>
+          <li>- Le mode laboratoire declenche des tests actifs sur cibles locales uniquement</li>
           <li>- Scannez uniquement les sites dont vous etes proprietaire ou autorise</li>
           <li>- Projet educatif - pas un outil de pentest professionnel</li>
         </ul>

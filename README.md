@@ -8,15 +8,17 @@
 
 ## 📋 Description
 
-Ce projet est un MVP (Minimum Viable Product) d'outil d'analyse de sécurité web automatisé. Il permet de scanner passivement un site web pour détecter des vulnérabilités courantes sans effectuer d'attaques destructives.
+Ce projet est un MVP (Minimum Viable Product) d'outil d'analyse de sécurité web automatisé. Il permet de scanner passivement un site web pour détecter des vulnérabilités courantes sans effectuer d'attaques destructives. Un mode laboratoire (tests actifs) est disponible uniquement pour des cibles locales autorisees.
 
 ### ⚠️ Avertissement Important
 
-Ce scanner effectue uniquement des analyses **non-destructives** :
+Ce scanner effectue par defaut des analyses **non-destructives** :
 - ❌ Pas de brute force
 - ❌ Pas de flood / DoS
 - ❌ Pas de modification de données
 - ❌ Pas de tentatives d'exploitation
+
+Le mode laboratoire (tests actifs) est limite a localhost, 127.0.0.1 ou *.local.
 
 **Scannez uniquement les sites dont vous êtes propriétaire ou pour lesquels vous avez une autorisation explicite.**
 
@@ -91,9 +93,10 @@ docker compose up --build
 
 1. Ouvrez http://localhost:3000 dans votre navigateur
 2. Entrez l'URL du site à analyser
-3. Cliquez sur "Lancer le scan"
-4. Attendez la fin de l'analyse (2-5 minutes selon le site)
-5. Consultez les résultats et téléchargez le rapport HTML
+3. (Optionnel) Cochez "mode laboratoire" pour lancer les tests actifs sur cibles locales
+4. Cliquez sur "Lancer le scan"
+5. Attendez la fin de l'analyse (2-5 minutes selon le site)
+6. Consultez les résultats et téléchargez le rapport HTML
 
 ## 🔌 API Backend
 
@@ -105,15 +108,14 @@ Créer un nouveau scan.
 ```json
 {
   "target_url": "https://example.com",
-  "max_duration_sec": 300
+  "max_duration_sec": 300,`n  "lab_mode": false
 }
 ```
 
 Réponse:
 ```json
 {
-  "run_id": "uuid"
-}
+  "run_id": "uuid",`n  "lab_mode": false`n}
 ```
 
 #### GET /runs/{run_id}
@@ -124,8 +126,7 @@ Obtenir le statut d'un scan.
   "status": "queued | running | finished | failed",
   "progress": 60,
   "target_url": "https://example.com",
-  "error_message": null
-}
+  "error_message": null,`n  "lab_mode": false`n}
 ```
 
 #### GET /runs/{run_id}/findings
@@ -167,8 +168,7 @@ Télécharger le rapport HTML.
     "Set up automated renewal"
   ],
   "source": "custom_probe",
-  "run_id": "uuid"
-}
+  "run_id": "uuid",`n  "lab_mode": false`n}
 ```
 
 ## 📁 Structure du Projet
@@ -286,7 +286,7 @@ curl http://localhost:8000/health
 # Lancer un scan
 curl -X POST http://localhost:8000/runs \
   -H "Content-Type: application/json" \
-  -d '{"target_url": "https://example.com"}'
+  -d '{"target_url": "https://example.com", "lab_mode": false}'
 
 # Vérifier le statut
 curl http://localhost:8000/runs/{run_id}
@@ -301,7 +301,7 @@ curl http://localhost:8000/runs/{run_id}
 
 ## 📝 Limitations
 
-1. **Scan passif uniquement** - Pas de tests actifs d'injection
+1. **Scan passif par defaut** - Mode laboratoire disponible pour cibles locales (localhost/127.0.0.1/*.local)
 2. **Sites publics** - Pas de gestion d'authentification
 3. **Single page** - Spider limité, pas de navigation JS complexe
 4. **Timeout** - Maximum 30 minutes par scan

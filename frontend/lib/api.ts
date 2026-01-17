@@ -7,10 +7,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export interface ScanRequest {
   target_url: string;
   max_duration_sec?: number;
+  lab_mode?: boolean;
 }
 
 export interface ScanResponse {
   run_id: string;
+  lab_mode: boolean;
 }
 
 export interface StatusResponse {
@@ -18,6 +20,7 @@ export interface StatusResponse {
   progress: number;
   target_url?: string;
   error_message?: string;
+  lab_mode?: boolean;
 }
 
 export interface Asset {
@@ -79,6 +82,7 @@ export async function startScan(request: ScanRequest): Promise<ScanResponse> {
     body: JSON.stringify({
       target_url: request.target_url,
       max_duration_sec: request.max_duration_sec || 300,
+      lab_mode: request.lab_mode || false,
     }),
   });
   return handleResponse<ScanResponse>(response);

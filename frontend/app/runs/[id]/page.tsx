@@ -135,6 +135,12 @@ export default function RunPage() {
           <p className="text-gray-500 text-sm mt-1">
             <span className="font-medium">ID:</span> {runId}
           </p>
+          {typeof status.lab_mode === 'boolean' && (
+            <p className="text-gray-500 text-sm mt-1">
+              <span className="font-medium">Mode:</span>{' '}
+              {status.lab_mode ? 'Laboratoire (tests actifs)' : 'Passif'}
+            </p>
+          )}
         </div>
 
         {status.status === 'finished' && (

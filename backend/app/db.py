@@ -33,6 +33,7 @@ def init_db():
                 status TEXT NOT NULL,
                 progress INTEGER DEFAULT 0,
                 max_duration_sec INTEGER DEFAULT 300,
+                lab_mode INTEGER DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 error_message TEXT
@@ -61,6 +62,13 @@ def init_db():
         
         conn.commit()
 
+        # Lightweight migration for older DBs missing lab_mode
+        cursor.execute("PRAGMA table_info(runs)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "lab_mode" not in columns:
+            cursor.execute("ALTER TABLE runs ADD COLUMN lab_mode INTEGER DEFAULT 0")
+            conn.commit()
+
 
 @contextmanager
 def get_connection():
@@ -81,8 +89,8 @@ def create_run(run: ScanRun) -> ScanRun:
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO runs (id, target_url, status, progress, max_duration_sec, created_at, updated_at, error_message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO runs (id, target_url, status, progress, max_duration_sec, lab_mode, created_at, updated_at, error_message)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run.id,
@@ -90,6 +98,7 @@ def create_run(run: ScanRun) -> ScanRun:
                 run.status.value,
                 run.progress,
                 run.max_duration_sec,
+                1 if run.lab_mode else 0,
                 run.created_at.isoformat(),
                 run.updated_at.isoformat(),
                 run.error_message,
@@ -115,6 +124,7 @@ def get_run(run_id: str) -> Optional[ScanRun]:
             status=RunStatus(row["status"]),
             progress=row["progress"],
             max_duration_sec=row["max_duration_sec"],
+            lab_mode=bool(row["lab_mode"]) if "lab_mode" in row.keys() else False,
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
             error_message=row["error_message"],

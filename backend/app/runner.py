@@ -18,6 +18,7 @@ from app.db import (
 from app.models import RunStatus, ScanRun
 from app.probes import HeadersProbe, TLSProbe
 from app.reporting import ReportBuilder
+from app.attacks.lab_attacks import run_lab_attacks
 
 # ZAP is optional (requires Docker)
 ZAP_ENABLED = os.environ.get("ZAP_ENABLED", "false").lower() == "true"
@@ -37,10 +38,11 @@ async def run_scan(run: ScanRun):
     1. Update status to running
     2. Run TLS probe
     3. Run headers probe
-    4. Run ZAP baseline scan (if enabled)
-    5. Parse and save findings
-    6. Generate report
-    7. Update status to finished
+    4. Run lab-mode active attacks (if enabled)
+    5. Run ZAP baseline scan (if enabled)
+    6. Parse and save findings
+    7. Generate report
+    8. Update status to finished
     """
     run_id = run.id
     target_url = run.target_url
@@ -73,7 +75,20 @@ async def run_scan(run: ScanRun):
             logger.error(f"[{run_id}] Headers probe error: {e}")
         update_run_progress(run_id, 60)
         
-        # Phase 3: ZAP Baseline Scan (60-80%) - Optional
+        # Phase 3: Lab-mode active attacks (60-70%) - Optional
+        if run.lab_mode:
+            logger.info(f"[{run_id}] Running lab-mode active tests...")
+            try:
+                lab_findings = run_lab_attacks(target_url, run_id)
+                all_findings.extend(lab_findings)
+                logger.info(f"[{run_id}] Lab-mode tests produced {len(lab_findings)} findings")
+            except Exception as e:
+                logger.error(f"[{run_id}] Lab-mode tests error: {e}")
+        else:
+            logger.info(f"[{run_id}] Lab-mode tests skipped")
+        update_run_progress(run_id, 70)
+
+        # Phase 4: ZAP Baseline Scan (70-85%) - Optional
         if ZAP_ENABLED:
             logger.info(f"[{run_id}] Running ZAP baseline scan...")
             try:
@@ -95,14 +110,14 @@ async def run_scan(run: ScanRun):
                 logger.error(f"[{run_id}] ZAP scan error: {e}")
         else:
             logger.info(f"[{run_id}] ZAP scan skipped (Docker not available)")
-        update_run_progress(run_id, 80)
+        update_run_progress(run_id, 85)
         
-        # Phase 4: Save findings (80-90%)
+        # Phase 5: Save findings (85-95%)
         logger.info(f"[{run_id}] Saving {len(all_findings)} findings...")
         save_findings(all_findings)
-        update_run_progress(run_id, 90)
+        update_run_progress(run_id, 95)
         
-        # Phase 5: Generate report (90-100%)
+        # Phase 6: Generate report (95-100%)
         logger.info(f"[{run_id}] Generating report...")
         try:
             updated_run = get_run(run_id)

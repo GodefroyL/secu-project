@@ -23,6 +23,36 @@ class ReportBuilder:
         severity_counts = self._count_by_severity()
         sorted_findings = self._sort_findings_by_severity()
         
+        lab_mode_label = "Mode laboratoire (tests actifs)" if self.run.lab_mode else "Analyse automatisée non-destructive"
+        if self.run.lab_mode:
+            analysis_scope_items = """
+                    <li><strong>Mode laboratoire activé</strong> : des tests actifs ont été effectués</li>
+                    <li>Utilisez uniquement des cibles locales ou autorisées</li>
+                    <li>Les tests actifs peuvent modifier l'état applicatif</li>
+            """
+            tools_list_items = """
+                    <li>Tests actifs en mode laboratoire (SQLi, CSRF, least-privilege, credential stuffing, DoS simulé)</li>
+            """
+        else:
+            analysis_scope_items = """
+                    <li>Cette analyse est <strong>strictement non-destructive</strong> (passive)</li>
+                    <li>Aucune tentative d'exploitation n'a été effectuée</li>
+                    <li>Aucun test de brute force ou de flood</li>
+                    <li>Scan limité aux vulnérabilités détectables passivement</li>
+            """
+            tools_list_items = ""
+
+        info_findings = [finding for finding in sorted_findings if finding.severity == Severity.INFO]
+        non_info_findings = [finding for finding in sorted_findings if finding.severity != Severity.INFO]
+        info_section = ""
+        if info_findings:
+            info_section = f"""
+        <section class="info-findings">
+            <h2>Informations</h2>
+            {self._render_findings_table(info_findings)}
+        </section>
+            """
+
         return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -37,7 +67,7 @@ class ReportBuilder:
     <div class="container">
         <header>
             <h1>🔒 Rapport d'Analyse de Sécurité</h1>
-            <p class="subtitle">Analyse automatisée non-destructive</p>
+            <p class="subtitle">{lab_mode_label}</p>
         </header>
 
         <section class="meta-info">
@@ -92,25 +122,22 @@ class ReportBuilder:
 
         <section class="findings">
             <h2>🔍 Vulnérabilités Détectées</h2>
-            {self._render_findings_table(sorted_findings[:10])}
-            
-            {f'<p class="more-findings">... et {len(sorted_findings) - 10} autres vulnérabilités</p>' if len(sorted_findings) > 10 else ''}
+            {self._render_findings_table(non_info_findings)}
         </section>
 
         <section class="details">
             <h2>📋 Détails des Vulnérabilités</h2>
-            {self._render_findings_details(sorted_findings[:10])}
+            {self._render_findings_details(non_info_findings)}
         </section>
+
+        {info_section}
 
         <section class="limitations">
             <h2>⚠️ Limitations et Avertissement Légal</h2>
             <div class="warning-box">
                 <h3>Portée de l'Analyse</h3>
                 <ul>
-                    <li>Cette analyse est <strong>strictement non-destructive</strong> (passive)</li>
-                    <li>Aucune tentative d'exploitation n'a été effectuée</li>
-                    <li>Aucun test de brute force ou de flood</li>
-                    <li>Scan limité aux vulnérabilités détectables passivement</li>
+                    {analysis_scope_items}
                 </ul>
 
                 <h3>Avertissement</h3>
@@ -127,6 +154,7 @@ class ReportBuilder:
                     <li>Analyse TLS/SSL personnalisée</li>
                     <li>Analyse des en-têtes HTTP de sécurité</li>
                     <li>Analyse des cookies</li>
+                    {tools_list_items}
                 </ul>
             </div>
         </section>
@@ -483,12 +511,6 @@ class ReportBuilder:
             color: #16a34a;
             font-size: 1.25rem;
             padding: 2rem;
-        }
-        
-        .more-findings {
-            text-align: center;
-            color: var(--color-text-muted);
-            font-style: italic;
         }
         
         footer {
